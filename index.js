@@ -18,19 +18,34 @@ app.get("/api/persons", (req, res) => {
 app.post("/api/persons", (req, res) => {
     let nuevo = req.body;
 
-    if(nuevo.name !== null) {
-        const id = DB.length > 0 ? Math.max(...DB.map(obj => obj.id)) + 1 : 1;
+    if(nuevo.name != null || nuevo.number != null) {
 
-        const obj = {
-            id: id,
-            name: nuevo.name,
-            number: nuevo.number,
-        };
+        let validar = true;
 
-        DB.push(obj);
-        console.log(`Se creo ${nuevo.name} con ID: ${id}`);
+        DB.forEach(obj => {
+            console.log(`${obj.name} =? ${nuevo.name}`);
+            
+            if(obj.name === nuevo.name) {
+                validar = false;
+                res.status(400).send("Ya existe ese contacto!");
+            }
+        });
+
+        if(validar) {
+            const id = DB.length > 0 ? Math.max(...DB.map(obj => obj.id)) + 1 : 1;
+
+            const obj = {
+                id: id,
+                name: nuevo.name,
+                number: nuevo.number,
+            };
+
+            DB.push(obj);
+            console.log(`Se creo ${nuevo.name} con ID: ${id}`);
+            
+            res.status(204);
+        }
         
-        res.status(204);
     } else {
         res.status(400).send("No se pudo crear el contacto");
     }
