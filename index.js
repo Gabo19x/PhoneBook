@@ -2,19 +2,48 @@ const express = require("express");
 const app = express();
 const {DB} = require("./data base/DB.js");
 
+/* FUNCION GET 
+    Se muestra todos los contactos disponibles
+*/
 app.get("/api/persons", (req, res) => {
     console.log("GET personas");
     res.status(200).json(DB);
 });
 
+/* FUNCION GET 
+    Se muestra segun el id enviado, el contacto correspondiente
+*/
 app.get("/api/persons/:id", (req, res) => {
     const id = req.params.id;
 
-    const persona = DB.find(obj => obj.id == id);
-
-    res.status(200).send(persona);
+    if(id >= 0) {
+        const persona = DB.find(obj => obj.id == id);
+        res.status(200).send(persona);
+    } else {
+        res.status(404).send("No existe esa persona");
+    }
+    
 });
 
+/* FUNCION DELETE
+    Borra un contacto segun el id
+*/
+app.delete("/api/persons/:id", (req, res) => {
+    const id = req.params.id;
+
+    if(id >= 0) {
+        const indice = DB.findIndex(obj => obj.id == id);
+        DB.splice(indice, 1);
+        console.log(`Se borro ${DB[indice].name}`);
+        res.status(204);
+    } else {
+        res.status(404).send("No existe esa persona");
+    }
+});
+
+/* FUNCION GET 
+    Se muestra la cantidad de contactos y la fecha del momento
+*/
 app.get("/info", (req, res) => {
     const tamaño = DB.length;
 

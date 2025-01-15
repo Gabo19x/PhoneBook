@@ -10,3 +10,6 @@ In /info the date and number of contacts are shown
 
 ### 3.3
 Now there is the possibility of consulting a contact only
+
+### 3.4
+You can now delete a specific contact
