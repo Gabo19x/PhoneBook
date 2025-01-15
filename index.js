@@ -7,6 +7,14 @@ app.get("/api/persons", (req, res) => {
     res.status(200).json(DB);
 });
 
+app.get("/api/persons/:id", (req, res) => {
+    const id = req.params.id;
+
+    const persona = DB.find(obj => obj.id == id);
+
+    res.status(200).send(persona);
+});
+
 app.get("/info", (req, res) => {
     const tamaño = DB.length;
 
