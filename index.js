@@ -2,12 +2,38 @@ const express = require("express");
 const app = express();
 const {DB} = require("./data base/DB.js");
 
+app.use(express.json());
+
 /* FUNCION GET 
     Se muestra todos los contactos disponibles
 */
 app.get("/api/persons", (req, res) => {
     console.log("GET personas");
     res.status(200).json(DB);
+});
+
+/* FUNCION POST
+    Crea un nuevo contacto con lo enviado en un JSON
+*/
+app.post("/api/persons", (req, res) => {
+    let nuevo = req.body;
+
+    if(nuevo.name !== null) {
+        const id = DB.length > 0 ? Math.max(...DB.map(obj => obj.id)) + 1 : 1;
+
+        const obj = {
+            id: id,
+            name: nuevo.name,
+            number: nuevo.number,
+        };
+
+        DB.push(obj);
+        console.log(`Se creo ${nuevo.name} con ID: ${id}`);
+        
+        res.status(204);
+    } else {
+        res.status(400).send("No se pudo crear el contacto");
+    }
 });
 
 /* FUNCION GET 

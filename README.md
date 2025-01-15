@@ -13,3 +13,6 @@ Now there is the possibility of consulting a contact only
 
 ### 3.4
 You can now delete a specific contact
+
+### 3.5
+Now you can also create contacts with the name and number
