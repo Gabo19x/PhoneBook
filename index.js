@@ -1,8 +1,11 @@
 const express = require("express");
 const app = express();
 const {DB} = require("./data base/DB.js");
+const cors = require('cors')
 
+app.use(cors())
 app.use(express.json());
+app.use(express.static('dist'));
 
 /* FUNCION GET 
     Se muestra todos los contactos disponibles
@@ -13,7 +16,9 @@ app.get("/api/persons", (req, res) => {
 });
 
 /* FUNCION POST
-    Crea un nuevo contacto con lo enviado en un JSON
+    Verifica que el JSON enviado tenga valores.
+    Luego se verifica que no exista uno con el mismo nombre.
+    Entonces, se crea el nuevo contacto con un ID aleatorio.
 */
 app.post("/api/persons", (req, res) => {
     let nuevo = req.body;
@@ -23,7 +28,6 @@ app.post("/api/persons", (req, res) => {
         let validar = true;
 
         DB.forEach(obj => {
-            console.log(`${obj.name} =? ${nuevo.name}`);
             
             if(obj.name === nuevo.name) {
                 validar = false;
@@ -104,7 +108,7 @@ app.get("/info", (req, res) => {
     `);
 });
 
-const PORT = 9000;
+const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
     console.log(`Servidor activo por express en http://localhost:${PORT}`);
 });
