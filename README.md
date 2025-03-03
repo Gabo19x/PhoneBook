@@ -17,3 +17,5 @@ You can now delete a specific contact
 ### 3.5 - 3.6
 Now you can also create contacts with the name and number. Additionally, it is validated that there is no one with the same name or that it is null.
 
+### 3.7 - 3.22
+The entire backend is added using mongo.js and mongo atlas database

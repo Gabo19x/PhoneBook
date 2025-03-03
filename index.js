@@ -2,6 +2,13 @@ const express = require("express");
 const app = express();
 const {DB} = require("./data base/DB.js");
 const cors = require('cors')
+const mongoose = require('mongoose');
+
+require("./mongo.js");
+
+const Person = require("./models/person.js");
+const notFound = require("./middleware/notFound.js");
+const handleErrors = require("./middleware/handleErrors.js");
 
 app.use(cors())
 app.use(express.json());
@@ -12,42 +19,36 @@ app.use(express.static('dist'));
 */
 app.get("/api/persons", (req, res) => {
     console.log("GET personas");
-    res.status(200).json(DB);
+    Person.find({})
+        .then((persons) => { res.status(200).json(persons) })
+        .catch((err) => { console.log(err); res.status(404).end("No hay objetos") });
 });
 
 /* FUNCION POST
     Verifica que el JSON enviado tenga valores.
-    Luego se verifica que no exista uno con el mismo nombre.
-    Entonces, se crea el nuevo contacto con un ID aleatorio.
+
+    Entonces, se crea el nuevo contacto.
 */
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
     let nuevo = req.body;
 
     if(nuevo.name != null || nuevo.number != null) {
 
         let validar = true;
 
-        DB.forEach(obj => {
-            
-            if(obj.name === nuevo.name) {
-                validar = false;
-                res.status(400).send("Ya existe ese contacto!");
-            }
-        });
-
         if(validar) {
-            const id = DB.length > 0 ? Math.max(...DB.map(obj => obj.id)) + 1 : 1;
-
-            const obj = {
-                id: id,
+            const persona = new Person({
                 name: nuevo.name,
                 number: nuevo.number,
-            };
+            })
 
-            DB.push(obj);
-            console.log(`Se creo ${nuevo.name} con ID: ${id}`);
+            persona.save()
+                .then((personaGuardar) => { 
+                    console.log(`Se creo ${nuevo.name}`);
+                    res.status(204).json(personaGuardar);
+                })
+                .catch((err) => { next(err) })
             
-            res.status(204);
         }
         
     } else {
@@ -55,15 +56,39 @@ app.post("/api/persons", (req, res) => {
     }
 });
 
+/* FUNCION PUT 
+    Se obtiene la info
+    Y se actualiza
+*/
+app.put("/api/persons/:id", (req, rest, next) => {
+    const id = req.params.id
+    let datos = req.body
+
+    const nuevaPersona = {
+        name: datos.name,
+        number: datos.number
+    }
+
+    Person.findByIdAndUpdate(id, nuevaPersona)
+        .then(() => {
+            console.log(`Se actualizo ${nuevaPersona.name}`);
+            res.status(202).json(nuevaPersona);
+        })
+        .catch((err) => { next(err) })
+})
+
 /* FUNCION GET 
     Se muestra segun el id enviado, el contacto correspondiente
 */
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
     const id = req.params.id;
 
-    if(id >= 0) {
-        const persona = DB.find(obj => obj.id == id);
-        res.status(200).send(persona);
+    if(id != null) {
+        // const persona = DB.find(obj => obj.id == id);
+        
+        Person.findById(id)
+            .then((persona) => { console.log(`Se encontro ${id}`); res.status(200).json(persona); })
+            .catch((err) => { next(err) })
     } else {
         res.status(404).send("No existe esa persona");
     }
@@ -73,14 +98,17 @@ app.get("/api/persons/:id", (req, res) => {
 /* FUNCION DELETE
     Borra un contacto segun el id
 */
-app.delete("/api/persons/:id", (req, res) => {
+app.delete("/api/persons/:id", (req, res, next) => {
     const id = req.params.id;
 
-    if(id >= 0) {
-        const indice = DB.findIndex(obj => obj.id == id);
-        DB.splice(indice, 1);
-        console.log(`Se borro ${DB[indice].name}`);
-        res.status(204);
+    if(id != null) {
+        Person.findByIdAndDelete(id)
+            .then(() => {
+                console.log("Se elimino");
+                res.status(204).end(`Se elimino ${id}`);
+            })
+            .catch((err) => { next(err) })
+        
     } else {
         res.status(404).send("No existe esa persona");
     }
@@ -107,6 +135,10 @@ app.get("/info", (req, res) => {
         </html>
     `);
 });
+
+// MIDDLEWARE
+app.use(notFound)
+app.use(handleErrors)
 
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
